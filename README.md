@@ -1,5 +1,5 @@
 # BugFixClassifier
-[![Build Status](https://travis-ci.org/ftrautsch/BugFixClassifier.svg?branch=master)](https://travis-ci.org/comfort-framework/comfort)
+[![Build Status](https://travis-ci.org/ftrautsch/BugFixClassifier.svg?branch=master)](https://travis-ci.org/ftrautsch/BugFixClassifier)
 
 ### Description 
 The BugFixClassifier provides two different things: 
