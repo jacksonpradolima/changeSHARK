@@ -15,6 +15,9 @@ before_script:
   - git clone https://github.com/smartshark/jSHARK $TRAVIS_BUILD_DIR/jSHARK
   - ./gradlew install -b $TRAVIS_BUILD_DIR/jSHARK/build.gradle
 
+  - git clone https://github.com/ftrautsch/tools-changedistiller $TRAVIS_BUILD_DIR/tools-changedistiller
+  - mvn install -f $TRAVIS_BUILD_DIR/tools-changedistiller/pom.xml
+
 
 script:
   - ./gradlew check
