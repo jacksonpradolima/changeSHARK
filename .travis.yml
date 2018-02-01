@@ -9,15 +9,14 @@ services: mongodb
 
 before_install:
   - cd $TRAVIS_BUILD_DIR
-
-before_script:
-  - chmod +x gradlew
   - git clone https://github.com/smartshark/jSHARK $TRAVIS_BUILD_DIR/jSHARK
   - ./gradlew install -b $TRAVIS_BUILD_DIR/jSHARK/build.gradle
 
   - git clone https://github.com/ftrautsch/tools-changedistiller $TRAVIS_BUILD_DIR/tools-changedistiller
   - mvn install -f $TRAVIS_BUILD_DIR/tools-changedistiller/pom.xml
 
+before_script:
+  - chmod +x gradlew
 
 script:
   - ./gradlew check
