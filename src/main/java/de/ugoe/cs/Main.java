@@ -16,10 +16,21 @@
 
 package de.ugoe.cs;
 
+import ch.uzh.ifi.seal.changedistiller.ChangeDistiller;
+import ch.uzh.ifi.seal.changedistiller.distilling.FileDistiller;
+import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import com.lexicalscope.jewel.cli.CliFactory;
+import de.ugoe.cs.bugfixtypes.ComputationChangeTypes;
+import de.ugoe.cs.bugfixtypes.DataChangeTypes;
+import de.ugoe.cs.bugfixtypes.InterfaceChangeTypes;
+import de.ugoe.cs.bugfixtypes.LogicControlChangeTypes;
+import de.ugoe.cs.bugfixtypes.OtherChangeTypes;
 import de.ugoe.cs.smartshark.CLIArguments;
 import de.ugoe.cs.smartshark.SmartSHARKPlugin;
+import java.io.File;
 import java.io.IOException;
+import java.rmi.UnexpectedException;
+import java.util.List;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 /**
@@ -35,8 +46,5 @@ public class Main {
         } catch (IOException | GitAPIException e) {
             e.printStackTrace();
         }
-
     }
-
-
 }
