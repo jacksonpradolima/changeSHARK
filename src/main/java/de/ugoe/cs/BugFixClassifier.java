@@ -52,7 +52,7 @@ import org.eclipse.jgit.util.io.DisabledOutputStream;
 public class BugFixClassifier {
     private static final Logger LOGGER = LogManager.getLogger(BugFixClassifier.class.getName());
 
-    public static Map<String, Integer> getBugClassifications2(Path file1, Path file2) throws UnexpectedException {
+    public static Map<String, Integer> getBugClassifications(Path file1, Path file2) throws UnexpectedException {
         FileDistiller distiller = ChangeDistiller.createFileDistiller(ChangeDistiller.Language.JAVA);
         // Go through the diff between these commits and calculate for each changed file and each change the change
         // type

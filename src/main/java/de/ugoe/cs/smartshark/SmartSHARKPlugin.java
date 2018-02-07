@@ -164,7 +164,7 @@ public class SmartSHARKPlugin {
                 LOGGER.debug("Skipping comparison of files {} and {}.", entry.getOldPath(), entry.getNewPath());
                 continue;
             }
-            Map<String, Integer> results = BugFixClassifier.getBugClassifications2(oldFile.toPath(), newFile.toPath());
+            Map<String, Integer> results = BugFixClassifier.getBugClassifications(oldFile.toPath(), newFile.toPath());
 
             // Add up the results
             for(Map.Entry<String, Integer> result: results.entrySet()) {
