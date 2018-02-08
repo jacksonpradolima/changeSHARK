@@ -104,7 +104,8 @@ public class BugFixClassifier {
         }
 
         if(change.getChangeType().name().startsWith("STATEMENT_") &&
-                change.getChangedEntity().getLabel().equals("VARIABLE_DECLARATION_STATEMENT")) {
+                change.getChangedEntity().getLabel().equals("VARIABLE_DECLARATION_STATEMENT")
+                 && !change.getParentEntity().getLabel().equals("FOR_INIT")) {
             return true;
         }
 
@@ -151,7 +152,8 @@ public class BugFixClassifier {
             }
         }
 
-        if(change.getChangeType().name().startsWith("STATEMENT_") &&
+        if(change.getChangeType().name().startsWith("STATEMENT_")
+                &&
                 (change.getChangedEntity().getLabel().equals("IF_STATEMENT") ||
                  change.getChangedEntity().getLabel().equals("FOREACH_STATEMENT") ||
                  change.getChangedEntity().getLabel().equals("CONTINUE_STATEMENT") ||
@@ -164,7 +166,17 @@ public class BugFixClassifier {
                  change.getChangedEntity().getLabel().equals("TRY_STATEMENT") ||
                  change.getChangedEntity().getLabel().equals("FOR_STATEMENT") ||
                  change.getChangedEntity().getLabel().equals("WHILE_STATEMENT") ||
-                 change.getChangedEntity().getLabel().equals("DO_STATEMENT"))) {
+                 change.getChangedEntity().getLabel().equals("DO_STATEMENT"))
+                ||
+                (
+                        change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION") &&
+                                change.getParentEntity().getLabel().equals("FOR_INCR")
+                )
+                ||
+                (
+                        change.getChangedEntity().getLabel().equals("VARIABLE_DECLARATION_STATEMENT") &&
+                                change.getParentEntity().getLabel().equals("FOR_INIT")
+                )) {
             return true;
         }
 
@@ -180,7 +192,8 @@ public class BugFixClassifier {
 
         if(change.getChangeType().name().startsWith("STATEMENT_") &&
                 (change.getChangedEntity().getLabel().equals("ASSIGNMENT") ||
-                 change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION"))) {
+                 change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION")) &&
+                (!change.getParentEntity().getLabel().equals("FOR_INCR"))) {
             return true;
         }
         return false;

@@ -29,6 +29,7 @@ import de.ugoe.cs.smartshark.CLIArguments;
 import de.ugoe.cs.smartshark.SmartSHARKPlugin;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.rmi.UnexpectedException;
 import java.util.List;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -38,13 +39,18 @@ import org.eclipse.jgit.api.errors.GitAPIException;
  */
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnexpectedException {
+        /*
         try {
             CLIArguments cliArguments = CliFactory.parseArguments(CLIArguments.class, args);
             SmartSHARKPlugin smartSHARKPlugin = new SmartSHARKPlugin(cliArguments);
             smartSHARKPlugin.storeDataViaBugfixCommits();
         } catch (IOException | GitAPIException e) {
             e.printStackTrace();
-        }
+        }*/
+        System.out.println(BugFixClassifier.getBugClassifications(
+                Paths.get("/home/ftrauts/testen/changedistiller_test/ConcurrentBag.java"),
+                Paths.get("/home/ftrauts/testen/changedistiller_test/ConcurrentBag_changed.java")
+        ));
     }
 }
