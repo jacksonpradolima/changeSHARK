@@ -173,10 +173,11 @@ public class SmartSHARKPlugin {
 
             Map<String, Integer> results = BugFixClassifier.getBugClassifications(oldFile.toPath(), newFile.toPath());
 
-            // If we do not have a result, but we know that something was changed, we put other in there
-            if(results.size() == 0) {
+            // If we could not distill changes, we declare it as other
+            if(results.isEmpty()) {
                 results =  new HashMap<String, Integer>(){{put("OTHER", 1);}};
             }
+
             classifications.put(dbFile.getId(), results);
         }
 
@@ -275,8 +276,9 @@ public class SmartSHARKPlugin {
     }
 
     private void storeResultInMongoDB(ObjectId commitId, ObjectId commitId2, Map<ObjectId, Map<String, Integer>> changes) {
+        // We set empty changes to null for the ORM framework
         if(changes.isEmpty()) {
-            return;
+            changes = null;
         }
 
         Query<CommitChanges> query = datastore.find(CommitChanges.class)
