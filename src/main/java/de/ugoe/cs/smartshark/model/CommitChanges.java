@@ -18,6 +18,7 @@ package de.ugoe.cs.smartshark.model;
 
 import java.util.Map;
 import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Property;
@@ -37,17 +38,17 @@ public class CommitChanges {
     @Property("new_commit_id")
     private ObjectId newCommitId;
 
-    @Property("changes")
-    private Map<String, Integer> changes;
+    @Embedded("changes")
+    private Map<ObjectId, Map<String, Integer>> classification;
 
     public CommitChanges() {
 
     }
 
-    public CommitChanges(ObjectId oldCommitId, ObjectId newCommitId, Map<String, Integer> changes) {
+    public CommitChanges(ObjectId oldCommitId, ObjectId newCommitId,  Map<ObjectId, Map<String, Integer>> classification) {
         this.oldCommitId = oldCommitId;
         this.newCommitId = newCommitId;
-        this.changes = changes;
+        this.classification = classification;
     }
 
     public ObjectId getId() {
@@ -74,11 +75,11 @@ public class CommitChanges {
         this.newCommitId = newCommitId;
     }
 
-    public Map<String, Integer> getChanges() {
-        return changes;
+    public  Map<ObjectId, Map<String, Integer>> getClassification() {
+        return classification;
     }
 
-    public void setChanges(Map<String, Integer> changes) {
-        this.changes = changes;
+    public void setClassification( Map<ObjectId, Map<String, Integer>> classification) {
+        this.classification = classification;
     }
 }

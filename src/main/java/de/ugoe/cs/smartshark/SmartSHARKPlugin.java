@@ -16,7 +16,6 @@
 
 package de.ugoe.cs.smartshark;
 
-import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import de.ugoe.cs.BugFixClassifier;
@@ -29,7 +28,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +110,7 @@ public class SmartSHARKPlugin {
             if(foundCommit != null) {
                 LOGGER.info("Comparing commits {} and {}.", foundCommit.getRevisionHash(), commit.getRevisionHash());
                 try {
-                    Map<String, Integer> changes = getBugClassifications(foundCommit.getRevisionHash(), commit.getRevisionHash());
+                    Map<ObjectId, Map<String, Integer>> changes = getBugClassifications(foundCommit.getRevisionHash(), commit.getRevisionHash());
                     storeResultInMongoDB(foundCommit.getId(), commit.getId(), changes);
                 } catch (IOException | GitAPIException e) {
                     LOGGER.warn("Could not get classification for commits {} and {}: "+e.getMessage(),
@@ -122,7 +120,7 @@ public class SmartSHARKPlugin {
         }
     }
 
-    private Map<String, Integer> getBugClassifications(String commit1Hash, String commit2Hash) throws IOException, GitAPIException {
+    private Map<ObjectId, Map<String, Integer>> getBugClassifications(String commit1Hash, String commit2Hash) throws IOException, GitAPIException {
         // 1) Copy vcsDirectory to two different locations
         Path commit1Location = Files.createTempDirectory("bc");
         FileUtils.copyDirectory(vcsDirectory.toFile(), commit1Location.toFile());
@@ -153,10 +151,11 @@ public class SmartSHARKPlugin {
 
         // Go through the diff between these commits and calculate for each changed file and each change the change
         // type
-        Map<String, Integer> classifiedChanges = new HashMap<>();
+        Map<ObjectId, Map<String, Integer>> classifications = new HashMap<>();
         for(DiffEntry entry : entries) {
             File oldFile = Paths.get(commit1Location.toString(), entry.getOldPath()).toFile();
             File newFile = Paths.get(commit2Location.toString(), entry.getNewPath()).toFile();
+
 
             // We can not distill changes, if there are none -> new file was added here. Maybe interface change?
             if(entry.getOldPath().equals("/dev/null") || entry.getNewPath().equals("/dev/null") ||
@@ -164,13 +163,21 @@ public class SmartSHARKPlugin {
                 LOGGER.debug("Skipping comparison of files {} and {}.", entry.getOldPath(), entry.getNewPath());
                 continue;
             }
+
+            // Get files from database
+            de.ugoe.cs.smartshark.model.File dbFile = datastore.createQuery(de.ugoe.cs.smartshark.model.File.class)
+                    .field("vcs_system_id").equal(vcsSystem.getId())
+                    .field("path").equal(entry.getNewPath())
+                    .get();
+
+
             Map<String, Integer> results = BugFixClassifier.getBugClassifications(oldFile.toPath(), newFile.toPath());
 
-            // Add up the results
-            for(Map.Entry<String, Integer> result: results.entrySet()) {
-                classifiedChanges.put(result.getKey(),
-                        classifiedChanges.getOrDefault(result.getKey(), 0)+result.getValue());
+            // If we do not have a result, but we know that something was changed, we put other in there
+            if(results.size() == 0) {
+                results =  new HashMap<String, Integer>(){{put("OTHER", 1);}};
             }
+            classifications.put(dbFile.getId(), results);
         }
 
         // Delete temporary folder
@@ -178,9 +185,9 @@ public class SmartSHARKPlugin {
         FileUtils.deleteDirectory(commit2Location.toFile());
 
         LOGGER.debug("Final result for changes between commit {} and {}: {}", commit1Hash, commit2Hash,
-                classifiedChanges);
+                classifications);
 
-        return classifiedChanges;
+        return classifications;
     }
 
     public void storeDataViaAllCommits() {
@@ -189,6 +196,28 @@ public class SmartSHARKPlugin {
                 .order("-committer_date").asList();
 
         storeDataOfCommits(commits);
+    }
+
+    public void storeSingleData(String sha1, String sha2) {
+        LOGGER.info("Comparing commits {} and {}.", sha1, sha2);
+        try {
+            Map<ObjectId, Map<String, Integer>> changes = getBugClassifications(sha1, sha2);
+
+            Commit commit1 = datastore.createQuery(Commit.class)
+                    .field("vcs_system_id").equal(vcsSystem.getId())
+                    .field("revision_hash").equal(sha1)
+                    .get();
+
+            Commit commit2 = datastore.createQuery(Commit.class)
+                    .field("vcs_system_id").equal(vcsSystem.getId())
+                    .field("revision_hash").equal(sha2)
+                    .get();
+
+            storeResultInMongoDB(commit1.getId(), commit2.getId(), changes);
+        } catch (IOException | GitAPIException e) {
+            LOGGER.warn("Could not get classification for commits {} and {}: "+e.getMessage(),
+                    sha1, sha2);
+        }
     }
 
     public void storeDataViaBugfixCommits() {
@@ -205,7 +234,7 @@ public class SmartSHARKPlugin {
             // We always chose the first parent --> we expect that developers have merged the feature branch in the master branch
             LOGGER.info("Comparing commits {} and {}.", commit.getParents().get(0), commit.getRevisionHash());
             try {
-                Map<String, Integer> changes = getBugClassifications(commit.getParents().get(0), commit.getRevisionHash());
+                Map<ObjectId, Map<String, Integer>> changes = getBugClassifications(commit.getParents().get(0), commit.getRevisionHash());
                 Commit parentCommit = datastore.createQuery(Commit.class)
                         .field("revision_hash").equal(commit.getParents().get(0))
                         .field("vcs_system_id").equal(vcsSystem.getId())
@@ -245,7 +274,7 @@ public class SmartSHARKPlugin {
         return foundCommit;
     }
 
-    private void storeResultInMongoDB(ObjectId commitId, ObjectId commitId2, Map<String, Integer> changes) {
+    private void storeResultInMongoDB(ObjectId commitId, ObjectId commitId2, Map<ObjectId, Map<String, Integer>> changes) {
         if(changes.isEmpty()) {
             return;
         }

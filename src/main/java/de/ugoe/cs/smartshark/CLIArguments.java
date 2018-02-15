@@ -41,11 +41,20 @@ public interface CLIArguments {
     @Option(defaultValue = "smartshark")
     String getDatabase();
 
-    @Option
+    @Option(longName = "sslEnabled")
     boolean getSSLEnabled();
 
     @Option(longName = "vcsSystemURL")
     String getVCSSystemURL();
+
+    @Option(longName = "strategy")
+    String getStrategy();
+
+    @Option(longName = "sha1", defaultToNull = true)
+    String getSha1();
+
+    @Option(longName = "sha2", defaultToNull = true)
+    String getSha2();
 
     @Option(helpRequest = true)
     boolean getHelp();

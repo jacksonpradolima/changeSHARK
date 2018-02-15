@@ -16,22 +16,11 @@
 
 package de.ugoe.cs;
 
-import ch.uzh.ifi.seal.changedistiller.ChangeDistiller;
-import ch.uzh.ifi.seal.changedistiller.distilling.FileDistiller;
-import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import com.lexicalscope.jewel.cli.CliFactory;
-import de.ugoe.cs.bugfixtypes.ComputationChangeTypes;
-import de.ugoe.cs.bugfixtypes.DataChangeTypes;
-import de.ugoe.cs.bugfixtypes.InterfaceChangeTypes;
-import de.ugoe.cs.bugfixtypes.LogicControlChangeTypes;
-import de.ugoe.cs.bugfixtypes.OtherChangeTypes;
 import de.ugoe.cs.smartshark.CLIArguments;
 import de.ugoe.cs.smartshark.SmartSHARKPlugin;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.rmi.UnexpectedException;
-import java.util.List;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 /**
@@ -40,17 +29,25 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 public class Main {
 
     public static void main(String[] args) throws UnexpectedException {
-        /*
         try {
             CLIArguments cliArguments = CliFactory.parseArguments(CLIArguments.class, args);
             SmartSHARKPlugin smartSHARKPlugin = new SmartSHARKPlugin(cliArguments);
-            smartSHARKPlugin.storeDataViaBugfixCommits();
+            switch(cliArguments.getStrategy().toLowerCase()) {
+                case "travis":
+                    smartSHARKPlugin.storeDataViaTravis();
+                    break;
+                case "all":
+                    smartSHARKPlugin.storeDataViaAllCommits();
+                    break;
+                case "bugfix":
+                    smartSHARKPlugin.storeDataViaBugfixCommits();
+                    break;
+                case "single":
+                    smartSHARKPlugin.storeSingleData(cliArguments.getSha1(), cliArguments.getSha2());
+                    break;
+            }
         } catch (IOException | GitAPIException e) {
             e.printStackTrace();
-        }*/
-        System.out.println(BugFixClassifier.getBugClassifications(
-                Paths.get("/home/ftrauts/testen/changedistiller_test/ConcurrentBag.java"),
-                Paths.get("/home/ftrauts/testen/changedistiller_test/ConcurrentBag_changed.java")
-        ));
+        }
     }
 }
