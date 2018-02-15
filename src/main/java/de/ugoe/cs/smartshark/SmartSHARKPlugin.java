@@ -44,10 +44,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * @author Fabian Trautsch
@@ -281,12 +278,19 @@ public class SmartSHARKPlugin {
             changes = null;
         }
 
-        Query<CommitChanges> query = datastore.find(CommitChanges.class)
+        CommitChanges commitChanges = datastore.createQuery(CommitChanges.class)
                 .field("old_commit_id").equal(commitId)
-                .field("new_commit_id").equal(commitId2);
-        UpdateOperations<CommitChanges> updateOperations = datastore.createUpdateOperations(CommitChanges.class)
-                .set("changes", changes);
-        datastore.findAndModify(query, updateOperations, new FindAndModifyOptions().returnNew(false).upsert(true));
+                .field("new_commit_id").equal(commitId2)
+                .get();
+
+        if(commitChanges == null) {
+            commitChanges = new CommitChanges();
+            commitChanges.setOldCommitId(commitId);
+            commitChanges.setNewCommitId(commitId2);
+        }
+
+        commitChanges.setClassification(changes);
+        datastore.save(commitChanges);
     }
 
 
