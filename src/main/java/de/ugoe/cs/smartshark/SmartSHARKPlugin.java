@@ -119,10 +119,10 @@ public class SmartSHARKPlugin {
 
     private Map<ObjectId, Map<String, Integer>> getBugClassifications(String commit1Hash, String commit2Hash) throws IOException, GitAPIException {
         // 1) Copy vcsDirectory to two different locations
-        Path commit1Location = Files.createTempDirectory("bc");
+        Path commit1Location = Files.createTempDirectory("bc-1");
         FileUtils.copyDirectory(vcsDirectory.toFile(), commit1Location.toFile());
 
-        Path commit2Location = Files.createTempDirectory("bc");
+        Path commit2Location = Files.createTempDirectory("bc-2");
         FileUtils.copyDirectory(vcsDirectory.toFile(), commit2Location.toFile());
 
         // 2) checkout to revision

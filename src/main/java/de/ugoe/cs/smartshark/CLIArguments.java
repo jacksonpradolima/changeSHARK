@@ -35,7 +35,7 @@ public interface CLIArguments {
     @Option(defaultValue = "27018")
     String getPort();
 
-    @Option(defaultToNull = true)
+    @Option(defaultToNull = true, longName = "authentication-db")
     String getAuthenticationDB();
 
     @Option(defaultValue = "smartshark")

@@ -24,27 +24,13 @@ import de.ugoe.cs.bugfixtypes.DataChangeTypes;
 import de.ugoe.cs.bugfixtypes.InterfaceChangeTypes;
 import de.ugoe.cs.bugfixtypes.LogicControlChangeTypes;
 import de.ugoe.cs.bugfixtypes.OtherChangeTypes;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffFormatter;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
-import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 /**
  * @author Fabian Trautsch
@@ -83,7 +69,9 @@ public class BugFixClassifier {
                 } else if(isOtherChange(change)) {
                     label = "OTHER";
                 } else {
-                    throw new UnexpectedException("Unexpected Change!");
+                    throw new UnexpectedException("Unexpected Change: " +
+                            "ChangeType: "+change.getChangeType()+", ChangedEntity: "+change.getChangedEntity()+" " +
+                            "ChangedParentEntity: "+change.getParentEntity());
                 }
 
                 classifiedChanges.put(label, classifiedChanges.getOrDefault(label, 0)+1);
@@ -128,7 +116,8 @@ public class BugFixClassifier {
         if(change.getChangeType().name().startsWith("STATEMENT_") &&
                 (change.getChangedEntity().getLabel().equals("METHOD_INVOCATION") ||
                  change.getChangedEntity().getLabel().equals("CONSTRUCTOR_INVOCATION") ||
-                 change.getChangedEntity().getLabel().equals("SYNCHRONIZED_STATEMENT"))) {
+                 change.getChangedEntity().getLabel().equals("SYNCHRONIZED_STATEMENT") ||
+                 change.getChangedEntity().getLabel().equals("CLASS_INSTANCE_CREATION"))) {
             return true;
         }
 
@@ -166,7 +155,8 @@ public class BugFixClassifier {
                  change.getChangedEntity().getLabel().equals("TRY_STATEMENT") ||
                  change.getChangedEntity().getLabel().equals("FOR_STATEMENT") ||
                  change.getChangedEntity().getLabel().equals("WHILE_STATEMENT") ||
-                 change.getChangedEntity().getLabel().equals("DO_STATEMENT"))
+                 change.getChangedEntity().getLabel().equals("DO_STATEMENT") ||
+                 change.getChangedEntity().getLabel().equals("LABELED_STATEMENT"))
                 ||
                 (
                         change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION") &&
@@ -204,6 +194,11 @@ public class BugFixClassifier {
             if(c.name().equals(change.getChangeType().name())) {
                 return true;
             }
+        }
+
+        if(change.getChangeType().name().startsWith("STATEMENT_") &&
+                change.getChangedEntity().getLabel().equals("ASSERT_STATEMENT")) {
+            return true;
         }
         return false;
     }
