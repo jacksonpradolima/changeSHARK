@@ -159,7 +159,9 @@ public class BugFixClassifier {
                  change.getChangedEntity().getLabel().equals("LABELED_STATEMENT"))
                 ||
                 (
-                        change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION") &&
+                        (change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION") ||
+                        change.getChangedEntity().getLabel().equals("PREFIX_EXPRESSION") ||
+                        change.getChangedEntity().getLabel().equals("ASSIGNMENT"))&&
                                 change.getParentEntity().getLabel().equals("FOR_INCR")
                 )
                 ||
@@ -182,7 +184,8 @@ public class BugFixClassifier {
 
         if(change.getChangeType().name().startsWith("STATEMENT_") &&
                 (change.getChangedEntity().getLabel().equals("ASSIGNMENT") ||
-                 change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION")) &&
+                 change.getChangedEntity().getLabel().equals("POSTFIX_EXPRESSION") ||
+                 change.getChangedEntity().getLabel().equals("PREFIX_EXPRESSION")) &&
                 (!change.getParentEntity().getLabel().equals("FOR_INCR"))) {
             return true;
         }

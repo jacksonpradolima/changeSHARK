@@ -23,7 +23,6 @@ import de.ugoe.cs.smartshark.model.Commit;
 import de.ugoe.cs.smartshark.model.CommitChanges;
 import de.ugoe.cs.smartshark.model.TravisBuild;
 import de.ugoe.cs.smartshark.model.VCSSystem;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,6 +54,7 @@ public class SmartSHARKPlugin {
     private final Datastore datastore;
     private final VCSSystem vcsSystem;
     private Path vcsDirectory;
+    private Git gitHook;
     private Repository originalRepo;
 
     public SmartSHARKPlugin(CLIArguments cliArguments) throws IOException, GitAPIException {
@@ -78,10 +78,13 @@ public class SmartSHARKPlugin {
         String projectName = parts[parts.length-1];
 
         vcsDirectory = Files.createTempDirectory(projectName);
-        originalRepo = Git.cloneRepository()
+
+        gitHook = Git.cloneRepository()
                 .setURI(vcsSystem.getUrl())
                 .setDirectory(vcsDirectory.toFile())
-                .call().getRepository();
+                .call();
+
+        originalRepo = gitHook.getRepository();
     }
 
     public void storeDataViaTravis() {
@@ -109,7 +112,7 @@ public class SmartSHARKPlugin {
                 try {
                     Map<ObjectId, Map<String, Integer>> changes = getBugClassifications(foundCommit.getRevisionHash(), commit.getRevisionHash());
                     storeResultInMongoDB(foundCommit.getId(), commit.getId(), changes);
-                } catch (IOException | GitAPIException e) {
+                } catch (IOException e) {
                     LOGGER.warn("Could not get classification for commits {} and {}: "+e.getMessage(),
                             foundCommit.getRevisionHash(), commit.getRevisionHash());
                 }
@@ -117,22 +120,8 @@ public class SmartSHARKPlugin {
         }
     }
 
-    private Map<ObjectId, Map<String, Integer>> getBugClassifications(String commit1Hash, String commit2Hash) throws IOException, GitAPIException {
-        // 1) Copy vcsDirectory to two different locations
-        Path commit1Location = Files.createTempDirectory("bc-1");
-        FileUtils.copyDirectory(vcsDirectory.toFile(), commit1Location.toFile());
-
-        Path commit2Location = Files.createTempDirectory("bc-2");
-        FileUtils.copyDirectory(vcsDirectory.toFile(), commit2Location.toFile());
-
-        // 2) checkout to revision
-        Git commit1Repo = Git.open(commit1Location.toFile());
-        commit1Repo.checkout().setName(commit1Hash).call();
-
-        Git commit2Repo = Git.open(commit2Location.toFile());
-        commit2Repo.checkout().setName(commit2Hash).call();
-
-        // 3) get all changed files between these revisions
+    private Map<ObjectId, Map<String, Integer>> getBugClassifications(String commit1Hash, String commit2Hash) throws IOException {
+        // get all changed files between these revisions
         ObjectReader reader = originalRepo.newObjectReader();
         CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
         org.eclipse.jgit.lib.ObjectId oldTree = originalRepo.resolve(commit1Hash+"^{tree}");
@@ -150,37 +139,51 @@ public class SmartSHARKPlugin {
         // type
         Map<ObjectId, Map<String, Integer>> classifications = new HashMap<>();
         for(DiffEntry entry : entries) {
-            File oldFile = Paths.get(commit1Location.toString(), entry.getOldPath()).toFile();
-            File newFile = Paths.get(commit2Location.toString(), entry.getNewPath()).toFile();
+            Path left = null;
+            Path right = null;
+            try {
+                // We can not distill changes, if there are none -> new file was added here. Maybe interface change?
+                if (entry.getOldPath().equals("/dev/null") || entry.getNewPath().equals("/dev/null") ||
+                        !entry.getOldPath().endsWith(".java") || !entry.getNewPath().endsWith(".java")) {
+                    LOGGER.debug("Skipping comparison of files {} and {}.", entry.getOldPath(), entry.getNewPath());
+                    continue;
+                }
+
+                left = Files.createTempFile("bc1-", "-suff");
+                right = Files.createTempFile("bc2-", "-suff");
+
+                gitHook.checkout().setForce(true).setStartPoint(commit1Hash).addPath(entry.getOldPath()).call();
+                FileUtils.copyFile(Paths.get(vcsDirectory.toString(), entry.getOldPath()).toFile(), left.toFile());
+
+                gitHook.checkout().setForce(true).setStartPoint(commit2Hash).addPath(entry.getNewPath()).call();
+                FileUtils.copyFile(Paths.get(vcsDirectory.toString(), entry.getNewPath()).toFile(), right.toFile());
+
+                // Get files from database
+                de.ugoe.cs.smartshark.model.File dbFile = datastore.createQuery(de.ugoe.cs.smartshark.model.File.class)
+                        .field("vcs_system_id").equal(vcsSystem.getId())
+                        .field("path").equal(entry.getNewPath())
+                        .get();
 
 
-            // We can not distill changes, if there are none -> new file was added here. Maybe interface change?
-            if(entry.getOldPath().equals("/dev/null") || entry.getNewPath().equals("/dev/null") ||
-                    !entry.getOldPath().endsWith(".java") || !entry.getNewPath().endsWith(".java")) {
-                LOGGER.debug("Skipping comparison of files {} and {}.", entry.getOldPath(), entry.getNewPath());
-                continue;
+                Map<String, Integer> results = BugFixClassifier.getBugClassifications(left, right);
+
+                // If we could not distill changes, we declare it as other
+                if (results.isEmpty()) {
+                    results = new HashMap<String, Integer>() {{
+                        put("OTHER", 1);
+                    }};
+                }
+
+                classifications.put(dbFile.getId(), results);
+            } catch (GitAPIException | IOException e) {
+                LOGGER.catching(e);
+            } finally {
+                if (left != null)
+                    Files.deleteIfExists(left);
+                if (right != null)
+                    Files.deleteIfExists(right);
             }
-
-            // Get files from database
-            de.ugoe.cs.smartshark.model.File dbFile = datastore.createQuery(de.ugoe.cs.smartshark.model.File.class)
-                    .field("vcs_system_id").equal(vcsSystem.getId())
-                    .field("path").equal(entry.getNewPath())
-                    .get();
-
-
-            Map<String, Integer> results = BugFixClassifier.getBugClassifications(oldFile.toPath(), newFile.toPath());
-
-            // If we could not distill changes, we declare it as other
-            if(results.isEmpty()) {
-                results =  new HashMap<String, Integer>(){{put("OTHER", 1);}};
-            }
-
-            classifications.put(dbFile.getId(), results);
         }
-
-        // Delete temporary folder
-        FileUtils.deleteDirectory(commit1Location.toFile());
-        FileUtils.deleteDirectory(commit2Location.toFile());
 
         LOGGER.debug("Final result for changes between commit {} and {}: {}", commit1Hash, commit2Hash,
                 classifications);
@@ -212,7 +215,7 @@ public class SmartSHARKPlugin {
                     .get();
 
             storeResultInMongoDB(commit1.getId(), commit2.getId(), changes);
-        } catch (IOException | GitAPIException e) {
+        } catch (IOException e) {
             LOGGER.warn("Could not get classification for commits {} and {}: "+e.getMessage(),
                     sha1, sha2);
         }
@@ -238,7 +241,7 @@ public class SmartSHARKPlugin {
                         .field("vcs_system_id").equal(vcsSystem.getId())
                         .get();
                 storeResultInMongoDB(parentCommit.getId(), commit.getId(), changes);
-            } catch (IOException | GitAPIException e) {
+            } catch (IOException e) {
                 LOGGER.warn("Could not get classification for commits {} and {}: "+e.getMessage(),
                         commit.getParents().get(0), commit.getRevisionHash());
             }
