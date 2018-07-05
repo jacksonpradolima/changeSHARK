@@ -21,6 +21,12 @@ before_script:
 script:
   - ./gradlew check
 
+after_success:
+  - ./gradlew shadowJar
+  - cd $TRAVIS_BUILD_DIR/plugin_packaging
+  - ./build_plugin.sh
+  - cp changeSHARK_plugin.tar $TRAVIS_BUILD_DIR
+
 deploy:
   provider: releases
   api_key: ${TRAVIS_GH_TOKEN}
