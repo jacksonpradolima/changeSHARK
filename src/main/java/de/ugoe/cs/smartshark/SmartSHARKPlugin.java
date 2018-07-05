@@ -227,6 +227,10 @@ public class SmartSHARKPlugin {
 
     private void storeDataOfCommits(List<Commit> commits) {
         for(Commit commit: commits) {
+            // We can not compare without parents
+            if (commit.getParents().size() == 0) {
+                continue;
+            }
             // We always chose the first parent --> we expect that developers have merged the feature branch in the master branch
             LOGGER.info("Comparing commits {} and {}.", commit.getParents().get(0), commit.getRevisionHash());
             try {
