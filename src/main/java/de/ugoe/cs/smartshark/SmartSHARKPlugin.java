@@ -58,7 +58,7 @@ public class SmartSHARKPlugin {
     private Git gitHook;
     private Repository originalRepo;
 
-    public SmartSHARKPlugin(CLIArguments cliArguments) throws IOException, GitAPIException {
+    public SmartSHARKPlugin(CLIArguments cliArguments) throws IOException {
         // Initialize db connection + values
         final Morphia morphia = new Morphia();
         morphia.mapPackage("de.ugoe.cs.smartshark.model");
@@ -75,10 +75,8 @@ public class SmartSHARKPlugin {
         vcsSystem = datastore.createQuery(VCSSystem.class)
                 .field("url").equal(cliArguments.getVCSSystemURL()).get();
 
-        System.out.println(cliArguments.getInput());
         vcsDirectory = Paths.get(cliArguments.getInput());
         gitHook = Git.open(new File(cliArguments.getInput()));
-        System.out.println(gitHook.getRepository().getConfig());
         originalRepo = gitHook.getRepository();
     }
 

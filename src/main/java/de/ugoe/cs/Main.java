@@ -16,11 +16,12 @@
 
 package de.ugoe.cs;
 
+import com.github.danielfelgar.morphia.Log4JLoggerImplFactory;
 import com.lexicalscope.jewel.cli.CliFactory;
 import de.ugoe.cs.smartshark.CLIArguments;
 import de.ugoe.cs.smartshark.SmartSHARKPlugin;
 import java.io.IOException;
-import org.eclipse.jgit.api.errors.GitAPIException;
+import org.mongodb.morphia.logging.MorphiaLoggerFactory;
 
 /**
  * @author Fabian Trautsch
@@ -29,6 +30,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
+            MorphiaLoggerFactory.registerLogger(Log4JLoggerImplFactory.class);
             CLIArguments cliArguments = CliFactory.parseArguments(CLIArguments.class, args);
             SmartSHARKPlugin smartSHARKPlugin = new SmartSHARKPlugin(cliArguments);
             switch(cliArguments.getStrategy().toLowerCase()) {
@@ -45,7 +47,7 @@ public class Main {
                     smartSHARKPlugin.storeSingleData(cliArguments.getSha1(), cliArguments.getSha2());
                     break;
             }
-        } catch (IOException | GitAPIException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

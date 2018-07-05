@@ -12,7 +12,7 @@
     "loggers": {
       "logger" : {
         "name": "org.mongodb.driver",
-        "level": "WARN"
+        "level": "ERROR"
       },
       "root": {
         "level": "debug",
