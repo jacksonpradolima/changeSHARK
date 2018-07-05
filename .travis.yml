@@ -20,3 +20,12 @@ before_script:
 
 script:
   - ./gradlew check
+
+deploy:
+  provider: releases
+  api_key: ${TRAVIS_GH_TOKEN}
+  file: "changeSHARK_plugin.tar"
+  skip_cleanup: true
+  on:
+    repo: ftrautsch/BugFixClassifier
+    tags: true

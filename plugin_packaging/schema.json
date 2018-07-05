@@ -1,0 +1,36 @@
+{
+  "collections":[
+    {
+      "fields": [
+        {
+          "type": "ObjectIdType",
+          "logical_type": "OID",
+          "field_name": "_id",
+          "desc": "Identifier of the document"
+        },
+        {
+          "type": "ObjectIdType",
+          "logical_type": "RID",
+          "reference_to": "commit",
+          "field_name": "old_commit_id",
+          "desc": "ObjectID of the older commit which is compared"
+        },
+        {
+          "type": "ObjectIdType",
+          "logical_type": "RID",
+          "reference_to": "commit",
+          "field_name": "new_commit_id",
+          "desc": "ObjectID of the newer commit which is compared"
+        },
+        {
+          "type":"StructType",
+          "logical_type":"Nested",
+          "field_name":"classification",
+          "desc": "Stores the classified change types between commits for each changed file"
+        }
+      ],
+      "desc": "Stores changes between commits",
+      "collection_name": "commit_changes"
+    }
+  ]
+}

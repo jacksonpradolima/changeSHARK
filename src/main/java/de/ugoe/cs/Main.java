@@ -20,7 +20,6 @@ import com.lexicalscope.jewel.cli.CliFactory;
 import de.ugoe.cs.smartshark.CLIArguments;
 import de.ugoe.cs.smartshark.SmartSHARKPlugin;
 import java.io.IOException;
-import java.rmi.UnexpectedException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 /**
@@ -28,7 +27,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
  */
 public class Main {
 
-    public static void main(String[] args) throws UnexpectedException {
+    public static void main(String[] args) {
         try {
             CLIArguments cliArguments = CliFactory.parseArguments(CLIArguments.class, args);
             SmartSHARKPlugin smartSHARKPlugin = new SmartSHARKPlugin(cliArguments);

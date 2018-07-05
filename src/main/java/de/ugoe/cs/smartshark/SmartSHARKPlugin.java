@@ -23,6 +23,7 @@ import de.ugoe.cs.smartshark.model.Commit;
 import de.ugoe.cs.smartshark.model.CommitChanges;
 import de.ugoe.cs.smartshark.model.TravisBuild;
 import de.ugoe.cs.smartshark.model.VCSSystem;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -74,16 +75,10 @@ public class SmartSHARKPlugin {
         vcsSystem = datastore.createQuery(VCSSystem.class)
                 .field("url").equal(cliArguments.getVCSSystemURL()).get();
 
-        String[] parts = vcsSystem.getUrl().split("/");
-        String projectName = parts[parts.length-1];
-
-        vcsDirectory = Files.createTempDirectory(projectName);
-
-        gitHook = Git.cloneRepository()
-                .setURI(vcsSystem.getUrl())
-                .setDirectory(vcsDirectory.toFile())
-                .call();
-
+        System.out.println(cliArguments.getInput());
+        vcsDirectory = Paths.get(cliArguments.getInput());
+        gitHook = Git.open(new File(cliArguments.getInput()));
+        System.out.println(gitHook.getRepository().getConfig());
         originalRepo = gitHook.getRepository();
     }
 

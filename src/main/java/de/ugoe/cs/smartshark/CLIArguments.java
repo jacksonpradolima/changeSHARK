@@ -23,6 +23,9 @@ import com.lexicalscope.jewel.cli.Option;
  */
 public interface CLIArguments {
 
+    @Option
+    String getInput();
+
     @Option(defaultToNull = true)
     String getUsername();
 
