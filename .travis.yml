@@ -33,5 +33,5 @@ deploy:
   file: "changeSHARK_plugin.tar"
   skip_cleanup: true
   on:
-    repo: ftrautsch/BugFixClassifier
+    repo: smartshark/changeSHARK
     tags: true

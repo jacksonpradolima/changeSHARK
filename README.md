@@ -1,8 +1,8 @@
-# BugFixClassifier
-[![Build Status](https://travis-ci.org/ftrautsch/BugFixClassifier.svg?branch=master)](https://travis-ci.org/ftrautsch/BugFixClassifier)
+# changeSHARK
+[![Build Status](https://travis-ci.org/smartshark/changeSHARK.svg?branch=master)](https://travis-ci.org/ftrautsch/BugFixClassifier)
 
 ### Description 
-The BugFixClassifier provides two different things: 
+The changeSHARK provides two different things: 
 
 1) A library which is able to classify bugfixes using 
 [ChangeDistiller](https://github.com/ftrautsch/tools-changedistiller) and the classification schema based
