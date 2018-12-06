@@ -7,7 +7,7 @@ mkdir -p /tmp/changeSHARK
 
 cd ..
 ./gradlew shadowJar
-cp build/libs/BugFixClassifier-all.jar /tmp/changeSHARK
+cp build/libs/*.jar /tmp/changeSHARK
 cd $current
 cp execute.sh /tmp/changeSHARK
 cp info.json /tmp/changeSHARK

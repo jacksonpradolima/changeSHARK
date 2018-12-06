@@ -1,5 +1,5 @@
 # changeSHARK
-[![Build Status](https://travis-ci.org/smartshark/changeSHARK.svg?branch=master)](https://travis-ci.org/ftrautsch/BugFixClassifier)
+[![Build Status](https://travis-ci.com/smartshark/changeSHARK.svg?branch=master)](https://travis-ci.org/ftrautsch/BugFixClassifier)
 
 ### Description 
 The changeSHARK provides two different things: 
