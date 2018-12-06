@@ -48,6 +48,7 @@ dependencies {
 
 shadowJar {
     configurations = [project.configurations.compile]
+    archiveName = "changeSHARK-all.${extension}"
 }
 
 javadoc {

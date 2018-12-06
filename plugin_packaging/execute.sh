@@ -5,7 +5,7 @@ NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 
 cp -R $REPOSITORY_PATH "/dev/shm/$NEW_UUID" || exit 1
 
-COMMAND="java -jar $PLUGIN_PATH/BugFixClassifier-all.jar --input /dev/shm/$NEW_UUID --database $6 --host $4 --port $5 --vcsSystemURL $3 --strategy all"
+COMMAND="java -jar $PLUGIN_PATH/changeSHARK-all.jar --input /dev/shm/$NEW_UUID --database $6 --host $4 --port $5 --vcsSystemURL $3 --strategy all"
 
 if [ ! -z ${7+x} ] && [ ${7} != "None" ]; then
 	COMMAND="$COMMAND --username ${7}"
